@@ -83,31 +83,37 @@ function App() {
 
             <div className="container">
                 <div>
+                    <button className="usercard" onClick={() => setReciver("")}>
+                        Group
+                    </button>
                     {users.map((u) => (
                         <button
+                            className="usercard"
                             disabled={u.id == me}
                             onClick={() => setReciver(u.id)}
                         >
+                            <img src={u.img}></img>
                             {u.name}
                         </button>
                     ))}
                 </div>
-                <div>
+                <div className="msg-container">
                     {chat.map((c) => (
-                        <div>
-                            <i>{c.id}</i>
-                            <br></br>
-                            {c.msg}
+                        <div
+                            className={`message ${
+                                c.sender.id == me ? "mine" : ""
+                            }`}
+                        >
+                            <img src={c.sender.img} alt={c.sender.name} />
+                            <span>{c.msg}</span>
                         </div>
                     ))}
                 </div>
                 <div>
                     {privateMsg.map((c) => (
-                        <div>
-                            <i>from {c.sender}</i> <br></br>
-                            <i>to: {c.id}</i>
-                            <br></br>
-                            {c.msg}
+                        <div className="message private">
+                            <img src={c.sender.img} alt={c.sender.name} />
+                            <span>{c.msg}</span>
                         </div>
                     ))}
                 </div>

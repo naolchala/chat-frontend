@@ -49,3 +49,64 @@ button {
     flex: 1;
     overflow-y: auto;
 }
+
+.usercard {
+    display: flex;
+    align-items: center;
+}
+
+.usercard img {
+    width: 30px;
+    height: 30px;
+    object-fit: cover;
+    border-radius: 100%;
+    margin-right: 8px;
+}
+
+.msg-container {
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    align-items: flex-start;
+}
+
+.message {
+    margin: 10px;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+}
+
+.message img {
+    object-fit: cover;
+    width: 30px;
+    height: 30px;
+    border-radius: 100%;
+    margin-right: 10px;
+}
+
+.message span {
+    text-align: left;
+    background-color: #2196f3;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 5px 5px 5px 0;
+}
+
+.message.private span {
+    background-color: #282c34;
+}
+
+.message.mine {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+}
+
+.message.mine img {
+    margin-left: 10px;
+}
+
+.message.mine span {
+    border-radius: 5px 5px 0 5px;
+    background-color: #282c34;
+}
