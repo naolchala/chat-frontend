@@ -1,30 +1,33 @@
-import {
-    EventHandler,
-    FormEventHandler,
-    useEffect,
-    useLayoutEffect,
-    useState,
-} from "react";
+import { FC, useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
-import "./App.css";
+import { MdArrowBack, MdMenu, MdSend } from "react-icons/md";
+import "./App.scss";
+import { animated, useSpring } from "react-spring";
+import { Message } from "./Message";
 
-const socket = io("http://localhost:4000", {
+const socket = io("http://192.168.0.5:5000", {
     // autoConnect: false,
 });
 
 function App() {
+    const [userCont, setUserCont] = useState(false);
     const [msg, setMessage] = useState("");
     const [chat, setChat] = useState([] as any[]);
     const [privateMsg, setPrivateMsg] = useState([] as any[]);
     const [users, setUsers] = useState([] as any[]);
     const [reciver, setReciver] = useState("");
+    const msgBottom = useRef<null | HTMLDivElement>(null);
 
     const me = window.sessionStorage.getItem("id");
 
-    const disconnect = () => {
-        socket.disconnect();
+    const sendToSingle = () => {
+        socket.emit("msgTo", {
+            id: window.sessionStorage.getItem("id"),
+            reciver,
+            msg,
+        });
     };
-    const connect = () => socket.connect();
+
     const sendMsg = (ev: any) => {
         ev.preventDefault();
         if (msg != "") {
@@ -38,15 +41,19 @@ function App() {
                 sendToSingle();
             }
         }
+
+        ScrollToMessageBottom();
     };
 
-    const sendToSingle = () => {
-        socket.emit("msgTo", {
-            id: window.sessionStorage.getItem("id"),
-            reciver,
-            msg,
-        });
+    const ScrollToMessageBottom = () =>
+        msgBottom.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+
+    const changeReceiver = (rec: string) => {
+        setReciver(rec);
+        ScrollToMessageBottom();
     };
+
+    const getUser = (id: string) => users.filter((user) => user.id == id);
 
     useEffect(() => {
         socket.on("msgs", (data) => setChat((val) => [...val, data]));
@@ -63,60 +70,96 @@ function App() {
         };
     }, []);
 
+    const contProps = useSpring({
+        to: {
+            width: userCont ? 72 : 0,
+        },
+    });
+
     return (
         <div className="App">
-            <button onClick={connect}>Connect</button>
-            <button onClick={disconnect}>Disconnect</button>
-            <br></br>
-            <form onSubmit={sendMsg}>
-                To: {reciver}
-                <br />
-                <input
-                    type={"text"}
-                    value={msg}
-                    onChange={(e) => setMessage(e.target.value)}
-                ></input>
-                <button type="submit" onClick={() => sendMsg(msg)}>
-                    Send
+            <animated.div style={contProps} className="usersContainer">
+                <button className="usercard" onClick={() => setReciver("")}>
+                    <img src="/icons8-globe-96.png" alt="" />
                 </button>
-            </form>
-
-            <div className="container">
-                <div>
-                    <button className="usercard" onClick={() => setReciver("")}>
-                        Group
-                    </button>
-                    {users.map((u) => (
+                {users
+                    .filter((u) => u.id != me)
+                    .map((u) => (
                         <button
                             className="usercard"
                             disabled={u.id == me}
                             onClick={() => setReciver(u.id)}
                         >
                             <img src={u.img}></img>
-                            {u.name}
                         </button>
                     ))}
+            </animated.div>
+            <div className="messagesContainer">
+                <div className="header">
+                    <button
+                        className="ic"
+                        onClick={(e) => setUserCont((val) => !val)}
+                    >
+                        {userCont ? <MdArrowBack /> : <MdMenu />}
+                    </button>
+                    <img
+                        src={
+                            reciver == ""
+                                ? "/icons8-globe-96.png"
+                                : getUser(reciver)[0].img
+                        }
+                        alt=""
+                        className="avatar"
+                    />
+                    {reciver == "" ? "World" : getUser(reciver)[0].name}
                 </div>
-                <div className="msg-container">
-                    {chat.map((c) => (
-                        <div
-                            className={`message ${
-                                c.sender.id == me ? "mine" : ""
-                            }`}
-                        >
-                            <img src={c.sender.img} alt={c.sender.name} />
-                            <span>{c.msg}</span>
+                <div className="txtContainer">
+                    {reciver == "" ? (
+                        <div className="msg-container">
+                            {chat.map((c, index) => (
+                                <Message message={c} key={index} />
+                            ))}
                         </div>
-                    ))}
-                </div>
-                <div>
-                    {privateMsg.map((c) => (
-                        <div className="message private">
-                            <img src={c.sender.img} alt={c.sender.name} />
-                            <span>{c.msg}</span>
+                    ) : (
+                        <div className="msg-container">
+                            {privateMsg
+                                .filter(
+                                    (msg) =>
+                                        msg.sender.id == reciver ||
+                                        msg.receiver.id == reciver
+                                )
+                                .map((c) => (
+                                    <div
+                                        className={`message ${
+                                            c.sender.id == me ? "mine" : ""
+                                        }`}
+                                    >
+                                        <img
+                                            src={c.sender.img}
+                                            alt={c.sender.name}
+                                        />
+                                        <span>{c.msg}</span>
+                                    </div>
+                                ))}
                         </div>
-                    ))}
+                    )}
+                    <div ref={msgBottom} className="dummyBottom"></div>
                 </div>
+                <form className="messageForm" onSubmit={sendMsg}>
+                    <input
+                        placeholder="Message"
+                        type={"text"}
+                        value={msg}
+                        onChange={(e) => setMessage(e.target.value)}
+                    ></input>
+                    <button type="submit" onClick={() => sendMsg(msg)}>
+                        <MdSend />
+                    </button>
+                </form>
+            </div>
+
+            <div className="container">
+                <div></div>
             </div>
         </div>
     );

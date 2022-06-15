@@ -1,0 +1,257 @@
+$darkest: #1b262c;
+$darker: #263238;
+$primaryDark: #0f4c75;
+$primary: #3282b8;
+$light: #bbe1fa;
+
+html::-webkit-scrollbar {
+    width: 18px;
+}
+
+html::-webkit-scrollbar-track {
+    background-color: $darkest;
+}
+
+html::-webkit-scrollbar-thumb {
+    width: 15px;
+    background: $light;
+}
+
+.App {
+    font-family: "Source Sans Pro", sans-serif;
+    display: flex;
+    height: 100vh;
+    width: 100%;
+    background-color: $darkest;
+}
+
+.usersContainer {
+    background-color: $darker;
+    box-shadow: rgba(0, 0, 0, 0.4) 0px 30px 90px;
+
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+    overflow-y: auto;
+    z-index: 99;
+
+    &::-webkit-scrollbar {
+        width: 7px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background-color: $darker;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: $darkest;
+        border-radius: 25px;
+    }
+}
+
+.messagesContainer {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+
+    .header {
+        box-shadow: rgba(50, 50, 93, 0.25) 0px 13px 27px -5px,
+            rgba(0, 0, 0, 0.3) 0px 8px 16px -8px;
+        background-color: $darker;
+        color: white;
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        font-size: 20px;
+        font-weight: bold;
+        height: 40px;
+
+        .ic {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: transparent;
+            color: white;
+            border: none;
+            font-size: 30px;
+            width: 40px;
+            height: 40px;
+            border-radius: 100%;
+
+            &:hover {
+                background: #fff2;
+                transition: all 200ms ease;
+            }
+        }
+
+        .avatar {
+            height: 40px;
+            width: 40px;
+            border-radius: 100%;
+            object-fit: cover;
+            margin: 0 8px;
+        }
+    }
+
+    .txtContainer {
+        padding: 15px;
+        flex: 1;
+        height: calc(100vh - 120px);
+        overflow-y: auto;
+
+        &::-webkit-scrollbar {
+            width: 7px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background-color: $darkest;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background: $light;
+        }
+    }
+
+    .messageForm {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        color: $light;
+        box-shadow: rgba(0, 0, 0, 0.56) 0px 22px 70px 4px;
+        background: $primaryDark;
+
+        input[type="text"] {
+            flex: 1;
+            padding: 15px;
+            font-size: 16px;
+            color: $light;
+            font-family: "Source Sans Pro", sans-serif;
+            outline: none;
+            background: $darkest;
+            border: none;
+        }
+
+        button {
+            background-color: transparent;
+            border: none;
+            color: lightblue;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-size: 20px;
+            padding: 15px;
+        }
+    }
+}
+
+.container {
+    display: flex;
+    flex-direction: row;
+}
+
+.container > div {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.usercard {
+    background: transparent;
+    border: none;
+    outline: none;
+    margin: 5px 0;
+    display: flex;
+    align-items: center;
+
+    &:hover {
+        img {
+            box-shadow: 0 0 0px 3px $light;
+            transition: all 300ms ease;
+        }
+    }
+
+    img {
+        padding: 5px;
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+        border-radius: 100%;
+    }
+}
+
+.msg-container {
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    align-items: flex-start;
+}
+
+.message {
+    position: relative;
+    margin: 10px 0;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+
+    img {
+        object-fit: cover;
+        width: 40px;
+        height: 40px;
+        border-radius: 100%;
+        margin-right: 10px;
+    }
+
+    span {
+        text-align: left;
+        background-color: $primary;
+        color: white;
+        padding: 10px 15px;
+        border-radius: 6px 6px 6px 0;
+        font-size: 14px;
+
+        position: relative;
+
+        &::before {
+            content: "";
+            display: block;
+            border-right: 6px solid $primary;
+            border-bottom: 4px solid $primary;
+            border-top: 7px solid transparent;
+            border-left: 5px solid transparent;
+            position: absolute;
+            left: -5px;
+            bottom: 0px;
+        }
+    }
+
+    &.mine {
+        align-self: flex-end;
+        flex-direction: row-reverse;
+
+        img {
+            margin-left: 10px;
+        }
+
+        span {
+            border-radius: 5px 5px 0 5px;
+            color: #0f1518;
+            background-color: $light;
+
+            &::before {
+                content: "";
+                display: block;
+                border-left: 6px solid $light;
+                border-bottom: 4px solid $light;
+                border-top: 7px solid transparent;
+                border-right: 5px solid transparent;
+                position: absolute;
+                left: auto;
+                right: -5px;
+                bottom: 0px;
+            }
+        }
+    }
+}
