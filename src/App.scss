@@ -1,8 +1,4 @@
-$darkest: #1b262c;
-$darker: #263238;
-$primaryDark: #0f4c75;
-$primary: #3282b8;
-$light: #bbe1fa;
+@import "variables";
 
 html::-webkit-scrollbar {
     width: 18px;
@@ -78,6 +74,18 @@ html::-webkit-scrollbar-thumb {
             width: 40px;
             height: 40px;
             border-radius: 100%;
+            position: relative;
+
+            span {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transform-origin: top left;
+            }
 
             &:hover {
                 background: #fff2;
@@ -96,8 +104,7 @@ html::-webkit-scrollbar-thumb {
 
     .txtContainer {
         padding: 15px;
-        flex: 1;
-        height: calc(100vh - 120px);
+        height: calc(100vh - 150px);
         overflow-y: auto;
 
         &::-webkit-scrollbar {
