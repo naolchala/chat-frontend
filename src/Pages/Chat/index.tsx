@@ -5,7 +5,7 @@ import { io } from "socket.io-client";
 import { Message } from "../../Message";
 
 const socket = io("http://192.168.0.5:5000", {
-    // autoConnect: false,
+    autoConnect: false,
 });
 
 function Chat() {
