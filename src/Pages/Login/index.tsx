@@ -2,7 +2,7 @@ import axios from "axios";
 import { Formik, FormikHelpers } from "formik";
 import { Link, useNavigate } from "react-router-dom";
 import * as yup from "yup";
-import { IUser, useUser } from "../../States/User";
+import { IUser, IUserState, useUser } from "../../States/User";
 import "./login.scss";
 
 const loginSchema = yup.object().shape({
@@ -18,7 +18,9 @@ interface ILogin {
 export const apiUrl = "http://localhost:5000";
 
 export function Login() {
-    const { setUser } = useUser();
+    const user = useUser((state) => state.currentUser);
+    const setUser = useUser((state) => state.setUser);
+
     const navigate = useNavigate();
 
     const handleSubmit = async (
@@ -28,7 +30,7 @@ export function Login() {
         const { email, password } = values;
         actions.setSubmitting(true);
         await axios
-            .post<{ user: IUser }>(
+            .post(
                 `${apiUrl}/auth/login`,
                 { email, password },
                 {
@@ -38,8 +40,9 @@ export function Login() {
                 }
             )
             .then((res) => {
-                const { user } = res.data;
-                setUser({ ...user });
+                const user = res.data;
+                window.localStorage.setItem("user", JSON.stringify(user));
+                setUser(user);
                 actions.setSubmitting(false);
                 navigate("/chat");
                 // TODO: STORE Token in Cookies
@@ -74,6 +77,7 @@ export function Login() {
                                     onBlur={_formik.handleBlur}
                                     name="email"
                                     id="email"
+                                    disabled={_formik.isSubmitting}
                                 />
                                 {_formik.touched.email &&
                                     _formik.errors.email && (
@@ -92,6 +96,7 @@ export function Login() {
                                     type="password"
                                     name="password"
                                     id="password"
+                                    disabled={_formik.isSubmitting}
                                 />
                                 {_formik.touched.password &&
                                     _formik.errors.password && (

@@ -1,77 +1,42 @@
-import { useState, useRef, useEffect } from "react";
-import { MdArrowBack, MdMenu, MdSend } from "react-icons/md";
+import { useState, useRef, useEffect, FC } from "react";
+import { MdArrowBack, MdMenu, MdSearch, MdSend } from "react-icons/md";
+import { FaTelegram } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import { useSpring, animated } from "react-spring";
 import { io } from "socket.io-client";
 import { Message } from "../../Message";
-
-const socket = io("http://192.168.0.5:5000", {
-    autoConnect: false,
-});
+import { IOtherUser, IUser, useUser } from "../../States/User";
+import { apiUrl } from "../Login";
+import { useContacts, useFetch } from "../../lib/api";
+import { useFormikContext } from "formik";
+import axios from "axios";
 
 function Chat() {
-    const [userCont, setUserCont] = useState(false);
+    let socket;
+    const navigate = useNavigate();
+    const user = useUser((state) => state.currentUser);
+    const [userCont, setUserCont] = useState(true);
     const [msg, setMessage] = useState("");
     const [chat, setChat] = useState([] as any[]);
     const [privateMsg, setPrivateMsg] = useState([] as any[]);
-    const [users, setUsers] = useState([] as any[]);
     const [reciver, setReciver] = useState("");
     const msgBottom = useRef<null | HTMLDivElement>(null);
 
-    const me = window.sessionStorage.getItem("id");
+    const [contacts, loading_contacts, contacts_error] = useFetch<IOtherUser[]>(
+        async () =>
+            await axios.get(`${apiUrl}/user/contacts`, {
+                headers: {
+                    Authorization: `Bearer ${user.token}`,
+                },
+            })
+    );
 
-    const sendToSingle = () => {
-        socket.emit("msgTo", {
-            id: window.sessionStorage.getItem("id"),
-            reciver,
-            msg,
-        });
-    };
-
-    const sendMsg = (ev: any) => {
-        ev.preventDefault();
-        if (msg != "") {
-            setMessage("");
-            if (reciver == "") {
-                socket.emit("msg", {
-                    id: window.sessionStorage.getItem("id"),
-                    msg,
-                });
-            } else {
-                sendToSingle();
-            }
-        }
-
-        ScrollToMessageBottom();
-    };
-
-    const ScrollToMessageBottom = () =>
-        msgBottom.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-
-    const changeReceiver = (rec: string) => {
-        setReciver(rec);
-        ScrollToMessageBottom();
-    };
-
-    const getUser = (id: string) => users.filter((user) => user.id == id);
-
-    useEffect(() => {
-        socket.on("msgs", (data) => setChat((val) => [...val, data]));
-        socket.on("toMe", (data) => setPrivateMsg((val) => [...val, data]));
-
-        socket.on("Connected", ({ id }) =>
-            window.sessionStorage.setItem("id", id)
-        );
-
-        socket.on("users", (data) => setUsers(data));
-
-        return () => {
-            socket.on("msgs", (data) => {});
-        };
-    }, []);
+    const me = "l";
+    const sendMsg = () => null;
 
     const contProps = useSpring({
         to: {
-            width: userCont ? 72 : 0,
+            width: userCont ? 400 : 72,
         },
     });
 
@@ -90,23 +55,59 @@ function Chat() {
             }deg) translate(-50%, -50%)`,
         },
     });
+
+    useEffect(() => {
+        socket = io(apiUrl, {
+            extraHeaders: {
+                Authorization: `Bearer ${user.token}`,
+            },
+        });
+
+        if (!user.id) {
+            navigate("/");
+        }
+    }, []);
     return (
         <div className="App">
             <animated.div style={contProps} className="usersContainer">
-                <button className="usercard" onClick={() => setReciver("")}>
-                    <img src="/icons8-globe-96.png" alt="" />
-                </button>
-                {users
-                    .filter((u) => u.id != me)
-                    .map((u) => (
-                        <button
-                            className="usercard"
-                            disabled={u.id == me}
-                            onClick={() => setReciver(u.id)}
-                        >
-                            <img src={u.img}></img>
-                        </button>
-                    ))}
+                <header>
+                    {userCont ? (
+                        <h1>Weregna</h1>
+                    ) : (
+                        <span>
+                            <FaTelegram size="24px"></FaTelegram>
+                        </span>
+                    )}
+
+                    {userCont && (
+                        <>
+                            <div className="flex-1"></div>
+                            <span>
+                                <MdSearch size={"24px"} />
+                            </span>
+                        </>
+                    )}
+                </header>
+                <div className="usersList">
+                    {loading_contacts && (
+                        <>
+                            <UserComponentLoader />
+                            <UserComponentLoader />
+                            <UserComponentLoader />
+                            <UserComponentLoader />
+                            <UserComponentLoader />
+                        </>
+                    )}
+                    {contacts_error && <span> error </span>}
+                    {contacts &&
+                        contacts.map((contact) => (
+                            <UserComponent
+                                key={contact.id}
+                                user={contact}
+                                showText={userCont}
+                            />
+                        ))}
+                </div>
             </animated.div>
             <div className="messagesContainer">
                 <div className="header">
@@ -122,16 +123,8 @@ function Chat() {
                             <MdMenu />
                         </animated.span>
                     </button>
-                    <img
-                        src={
-                            reciver == ""
-                                ? "/icons8-globe-96.png"
-                                : getUser(reciver)[0].img
-                        }
-                        alt=""
-                        className="avatar"
-                    />
-                    {reciver == "" ? "World" : getUser(reciver)[0].name}
+                    <img src={user.photoUrl} alt="" className="avatar" />
+                    {user.name}
                 </div>
                 <div className="txtContainer">
                     {reciver == "" ? (
@@ -172,7 +165,7 @@ function Chat() {
                         value={msg}
                         onChange={(e) => setMessage(e.target.value)}
                     ></input>
-                    <button type="submit" onClick={() => sendMsg(msg)}>
+                    <button type="submit" onClick={() => sendMsg()}>
                         <MdSend />
                     </button>
                 </form>
@@ -186,3 +179,40 @@ function Chat() {
 }
 
 export { Chat };
+interface IUserComponent {
+    showText: boolean;
+    user: IOtherUser;
+}
+const UserComponent: FC<IUserComponent> = ({
+    showText,
+    user,
+}: IUserComponent) => {
+    console.log({ user });
+    return (
+        <div className="user">
+            <div className="avatar">
+                <img src={user.photoUrl} alt="Naol" />
+            </div>
+            {showText && (
+                <div className="textContainer">
+                    <div className="name">{user.name}</div>
+                    <div className="lastMessage">{user.email}</div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+const UserComponentLoader = () => {
+    return (
+        <div className="user-loader">
+            <div className="avatar">
+                <div className="img-loader"></div>
+            </div>
+            <div className="textContainer">
+                <div className="name"></div>
+                <div className="lastMessage"></div>
+            </div>
+        </div>
+    );
+};

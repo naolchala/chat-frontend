@@ -17,7 +17,8 @@
     "react-router-dom": "6",
     "react-spring": "^9.4.5",
     "socket.io-client": "^4.5.1",
-    "yup": "^0.32.11"
+    "yup": "^0.32.11",
+    "zustand": "^4.0.0-rc.1"
   },
   "devDependencies": {
     "@types/node": "^18.0.0",

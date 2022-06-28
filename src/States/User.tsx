@@ -1,6 +1,6 @@
-import { createContext, FC, ReactNode, useContext, useState } from "react";
+import create from "zustand";
 
-interface IUser {
+export interface IUser {
     id: string;
     name: string;
     email: string;
@@ -11,23 +11,41 @@ interface IUser {
     lastseen: string;
 }
 
-interface IUserContext {
-    user: IUser;
-    setUser: (user: IUser) => void;
+export type IOtherUser = Omit<IUser, "token">;
+
+export interface IUserState {
+    currentUser: IUser;
+    setUser: (newUser: IUser) => void;
+    logout: () => void;
 }
-const UserContext = createContext({} as IUserContext);
 
-const UserProvider: FC<{ children?: ReactNode }> = (props) => {
-    const [user, setCurrentUser] = useState({} as IUser);
-    const setUser = (newUser: IUser) => setCurrentUser(newUser);
-    return (
-        <UserContext.Provider value={{ user, setUser }}>
-            {props.children}
-        </UserContext.Provider>
-    );
-};
+export const useUser = create<IUserState>((set) => ({
+    currentUser: {} as IUser,
+    setUser: (newUser: IUser) => set({ currentUser: newUser }),
+    logout: () => set({ currentUser: {} as IUser }),
+}));
 
-const useUser = () => useContext(UserContext);
+export interface IFriendsState {
+    friends: IOtherUser[];
+    addOnlineFriend: (friend: IOtherUser) => void;
+    setOnlineStatus: (id: string, status: boolean) => void;
+}
+export const useFriends = create<IFriendsState>((set, get) => {
+    return {
+        friends: [] as IOtherUser[],
+        addOnlineFriend: (friend: IOtherUser) => {
+            set((state) => ({
+                friends: [...state.friends, friend],
+            }));
+        },
 
-export { UserProvider, useUser };
-export type { IUser };
+        setOnlineStatus: (id: string, status: boolean) => {
+            const u = get().friends.filter((user) => user.id == id)[0];
+            u.isOnline = status;
+
+            set((state) => ({
+                friends: [...state.friends, u],
+            }));
+        },
+    };
+});

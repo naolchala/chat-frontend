@@ -31,6 +31,36 @@ html::-webkit-scrollbar-thumb {
     overflow-y: auto;
     z-index: 99;
 
+    header {
+        height: 40px;
+        padding: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        box-shadow: rgba(0, 0, 0, 0.4) 0px 30px 90px;
+
+        h1 {
+            padding: 0;
+            font-size: 24px;
+            margin: 0;
+        }
+        .flex-1 {
+            flex: 1;
+        }
+        span {
+            width: 24px;
+            height: 24px;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 300ms;
+
+            &:hover {
+                background: #fff2;
+            }
+        }
+    }
+
     &::-webkit-scrollbar {
         width: 7px;
     }
@@ -260,5 +290,117 @@ html::-webkit-scrollbar-thumb {
                 bottom: 0px;
             }
         }
+    }
+}
+
+.user {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 15px 9px;
+    color: white;
+    cursor: pointer;
+    transition: all 300ms ease;
+
+    &:hover {
+        background-color: #fff1;
+    }
+
+    .avatar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 5px;
+        margin-right: 6px;
+
+        img {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+    }
+
+    .textContainer {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+
+        .name {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 3px;
+        }
+        .lastMessage {
+            font-size: 13px;
+        }
+    }
+}
+
+.user-loader {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 15px 9px;
+    color: white;
+    cursor: pointer;
+    transition: all 300ms ease;
+
+    &:hover {
+        background-color: #fff1;
+    }
+
+    .avatar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 5px;
+        margin-right: 6px;
+
+        .img-loader {
+            display: block;
+            height: 45px;
+            width: 45px;
+            border-radius: 50%;
+
+            animation: loadingSkeleton 2s linear infinite;
+            animation-direction: alternate;
+        }
+    }
+
+    .textContainer {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+
+        .name {
+            height: 10px;
+            width: 150px;
+            display: block;
+            border-radius: 15px;
+            margin-bottom: 10px;
+
+            animation: loadingSkeleton 2s linear infinite;
+            animation-direction: alternate;
+        }
+        .lastMessage {
+            height: 8px;
+            width: 100%;
+            display: block;
+            border-radius: 15px;
+
+            animation: loadingSkeleton 2s linear infinite;
+            animation-direction: alternate;
+        }
+    }
+}
+
+@keyframes loadingSkeleton {
+    0% {
+        background: $darker;
+    }
+
+    100% {
+        background: $darkest;
     }
 }
