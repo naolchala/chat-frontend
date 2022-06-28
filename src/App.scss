@@ -1,5 +1,9 @@
 @import "variables";
 
+* {
+    box-sizing: border-box;
+}
+
 html::-webkit-scrollbar {
     width: 18px;
 }
@@ -22,6 +26,7 @@ html::-webkit-scrollbar-thumb {
 }
 
 .usersContainer {
+    position: relative;
     background-color: $darker;
     box-shadow: rgba(0, 0, 0, 0.4) 0px 30px 90px;
 
@@ -32,11 +37,11 @@ html::-webkit-scrollbar-thumb {
     z-index: 99;
 
     header {
-        height: 40px;
+        position: relative;
+        height: 70px;
         padding: 15px;
         display: flex;
         align-items: center;
-        justify-content: center;
         color: white;
         box-shadow: rgba(0, 0, 0, 0.4) 0px 30px 90px;
 
@@ -49,8 +54,9 @@ html::-webkit-scrollbar-thumb {
             flex: 1;
         }
         span {
-            width: 24px;
-            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             padding: 8px;
             border-radius: 50%;
             transition: all 300ms;
@@ -58,6 +64,29 @@ html::-webkit-scrollbar-thumb {
             &:hover {
                 background: #fff2;
             }
+        }
+
+        .search-input-field {
+            position: relative;
+            background-color: $darkest;
+            font-family: "source sans pro";
+            border: none;
+            color: white;
+            width: 100%;
+            padding: 10px;
+            outline: none;
+            font-size: 16px;
+        }
+
+        .searchResult--container {
+            position: absolute;
+            left: 0;
+            right: 0;
+            background-color: $darker;
+            top: 70px;
+            padding: 15px;
+
+            box-shadow: rgba(0, 0, 0, 0.25) 0px 25px 50px -12px;
         }
     }
 
@@ -91,7 +120,7 @@ html::-webkit-scrollbar-thumb {
         padding: 15px;
         font-size: 20px;
         font-weight: bold;
-        height: 40px;
+        height: 70px;
 
         .ic {
             display: flex;
@@ -304,6 +333,21 @@ html::-webkit-scrollbar-thumb {
 
     &:hover {
         background-color: #fff1;
+    }
+
+    &.selected {
+        background-color: $darkest;
+    }
+
+    &.dense {
+        padding: 9px 5px;
+
+        .avatar {
+            img {
+                width: 30px;
+                height: 30px;
+            }
+        }
     }
 
     .avatar {

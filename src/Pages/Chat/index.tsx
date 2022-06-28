@@ -1,26 +1,29 @@
+import { TextContainer } from "./TextContainer";
 import { useState, useRef, useEffect, FC } from "react";
-import { MdArrowBack, MdMenu, MdSearch, MdSend } from "react-icons/md";
+import { MdArrowBack, MdClose, MdMenu, MdSearch, MdSend } from "react-icons/md";
 import { FaTelegram } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useSpring, animated } from "react-spring";
 import { io } from "socket.io-client";
 import { Message } from "../../Message";
-import { IOtherUser, IUser, useUser } from "../../States/User";
+import { IOtherUser, IUser, useFriends, useUser } from "../../States/User";
 import { apiUrl } from "../Login";
-import { useContacts, useFetch } from "../../lib/api";
+import { searchPerson, useContacts, useFetch } from "../../lib/api";
 import { useFormikContext } from "formik";
 import axios from "axios";
+import { useSettings } from "../../States/Settings";
+import debounce from "lodash.debounce";
 
 function Chat() {
     let socket;
+
     const navigate = useNavigate();
     const user = useUser((state) => state.currentUser);
-    const [userCont, setUserCont] = useState(true);
-    const [msg, setMessage] = useState("");
-    const [chat, setChat] = useState([] as any[]);
-    const [privateMsg, setPrivateMsg] = useState([] as any[]);
-    const [reciver, setReciver] = useState("");
-    const msgBottom = useRef<null | HTMLDivElement>(null);
+    const menuOpen = useSettings((state) => state.menuOpen);
+    const searchResult = useFriends((state) => state.searchResult);
+    const setSearchResult = useFriends((state) => state.setSearchResult);
+    const [searchBar, setSearchBar] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
 
     const [contacts, loading_contacts, contacts_error] = useFetch<IOtherUser[]>(
         async () =>
@@ -30,31 +33,6 @@ function Chat() {
                 },
             })
     );
-
-    const me = "l";
-    const sendMsg = () => null;
-
-    const contProps = useSpring({
-        to: {
-            width: userCont ? 400 : 72,
-        },
-    });
-
-    const backProps = useSpring({
-        to: {
-            transform: `scale(${userCont ? 1 : 0}) rotate(${
-                userCont ? 0 : 90
-            }deg) translate(-50%, -50%)`,
-        },
-    });
-
-    const menuProps = useSpring({
-        to: {
-            transform: `scale(${userCont ? 0 : 1}) rotate(${
-                userCont ? -90 : 0
-            }deg) translate(-50%, -50%)`,
-        },
-    });
 
     useEffect(() => {
         socket = io(apiUrl, {
@@ -67,25 +45,75 @@ function Chat() {
             navigate("/");
         }
     }, []);
+
+    const contProps = useSpring({
+        to: {
+            width: menuOpen ? 400 : 72,
+        },
+    });
+
+    const searchBarProps = useSpring({
+        to: {
+            transform: `scale(${searchBar ? 1 : 0})`,
+        },
+    });
+
+    const changeSearchQuery = debounce(async (e) => {
+        const val = e?.target?.value;
+        setSearchQuery(val);
+        const searchedContacts = await searchPerson(val);
+        setSearchResult(searchedContacts);
+    }, 500);
+
     return (
         <div className="App">
             <animated.div style={contProps} className="usersContainer">
                 <header>
-                    {userCont ? (
+                    {menuOpen && !searchBar ? (
                         <h1>Weregna</h1>
                     ) : (
-                        <span>
+                        <span onClick={() => setSearchBar(false)}>
                             <FaTelegram size="24px"></FaTelegram>
                         </span>
                     )}
 
-                    {userCont && (
+                    {menuOpen && (
                         <>
-                            <div className="flex-1"></div>
-                            <span>
-                                <MdSearch size={"24px"} />
+                            <div className="flex-1">
+                                <animated.input
+                                    onChange={changeSearchQuery}
+                                    style={searchBarProps}
+                                    className="search-input-field"
+                                    placeholder="Search by Email"
+                                />
+                            </div>
+                            <span onClick={() => setSearchBar((val) => !val)}>
+                                {searchBar ? (
+                                    <MdClose size={"24px"} />
+                                ) : (
+                                    <MdSearch size={"24px"} />
+                                )}
                             </span>
                         </>
+                    )}
+
+                    {searchBar && menuOpen && (
+                        <div className="searchResult--container">
+                            {searchResult.length == 0 && (
+                                <span className="info-text">
+                                    No Email Matches
+                                </span>
+                            )}
+
+                            {searchResult.map((result) => (
+                                <UserComponent
+                                    showText={true}
+                                    user={result}
+                                    key={result.id}
+                                    dense
+                                ></UserComponent>
+                            ))}
+                        </div>
                     )}
                 </header>
                 <div className="usersList">
@@ -104,72 +132,12 @@ function Chat() {
                             <UserComponent
                                 key={contact.id}
                                 user={contact}
-                                showText={userCont}
+                                showText={menuOpen}
                             />
                         ))}
                 </div>
             </animated.div>
-            <div className="messagesContainer">
-                <div className="header">
-                    <button
-                        className="ic"
-                        onClick={(e) => setUserCont((val) => !val)}
-                    >
-                        <animated.span style={backProps}>
-                            <MdArrowBack />
-                        </animated.span>
-
-                        <animated.span style={menuProps}>
-                            <MdMenu />
-                        </animated.span>
-                    </button>
-                    <img src={user.photoUrl} alt="" className="avatar" />
-                    {user.name}
-                </div>
-                <div className="txtContainer">
-                    {reciver == "" ? (
-                        <div className="msg-container">
-                            {chat.map((c, index) => (
-                                <Message message={c} key={index} />
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="msg-container">
-                            {privateMsg
-                                .filter(
-                                    (msg) =>
-                                        msg.sender.id == reciver ||
-                                        msg.receiver.id == reciver
-                                )
-                                .map((c) => (
-                                    <div
-                                        className={`message ${
-                                            c.sender.id == me ? "mine" : ""
-                                        }`}
-                                    >
-                                        <img
-                                            src={c.sender.img}
-                                            alt={c.sender.name}
-                                        />
-                                        <span>{c.msg}</span>
-                                    </div>
-                                ))}
-                        </div>
-                    )}
-                    <div ref={msgBottom} className="dummyBottom"></div>
-                </div>
-                <form className="messageForm" onSubmit={sendMsg}>
-                    <input
-                        placeholder="Message"
-                        type={"text"}
-                        value={msg}
-                        onChange={(e) => setMessage(e.target.value)}
-                    ></input>
-                    <button type="submit" onClick={() => sendMsg()}>
-                        <MdSend />
-                    </button>
-                </form>
-            </div>
+            <TextContainer />
 
             <div className="container">
                 <div></div>
@@ -182,14 +150,26 @@ export { Chat };
 interface IUserComponent {
     showText: boolean;
     user: IOtherUser;
+    dense?: boolean;
 }
 const UserComponent: FC<IUserComponent> = ({
     showText,
     user,
+    dense,
 }: IUserComponent) => {
-    console.log({ user });
+    const setSelectedUser = useUser((state) => state.setSelectedUser);
+    const selectedUser = useUser((state) => state.selectedUser);
+    const setUser = () => {
+        setSelectedUser(user);
+    };
+
     return (
-        <div className="user">
+        <div
+            className={`user ${dense && "dense"}  ${
+                selectedUser.id === user.id && "selected"
+            }`}
+            onClick={setUser}
+        >
             <div className="avatar">
                 <img src={user.photoUrl} alt="Naol" />
             </div>

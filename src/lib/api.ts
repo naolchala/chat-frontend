@@ -42,3 +42,11 @@ export const useFetch = <T extends unknown>(
 
     return [data, loading, error];
 };
+
+export const searchPerson = async (email: string) => {
+    const people: IOtherUser[] = await axios
+        .get<IOtherUser[]>(`${apiUrl}/user/search?email=${email}`)
+        .then((res) => res.data);
+    console.log({ people });
+    return people;
+};
