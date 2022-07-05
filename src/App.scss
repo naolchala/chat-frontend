@@ -87,6 +87,8 @@ html::-webkit-scrollbar-thumb {
             padding: 15px;
 
             box-shadow: rgba(0, 0, 0, 0.25) 0px 25px 50px -12px;
+
+            animation: fadeInBottom 300ms ease-in-out;
         }
     }
 
@@ -350,6 +352,13 @@ html::-webkit-scrollbar-thumb {
         }
     }
 
+    &.online {
+        .avatar {
+            border: 2px solid #3f4;
+            border-radius: 50%;
+        }
+    }
+
     .avatar {
         display: flex;
         align-items: center;
@@ -446,5 +455,16 @@ html::-webkit-scrollbar-thumb {
 
     100% {
         background: $darkest;
+    }
+}
+
+@keyframes fadeInBottom {
+    from {
+        opacity: 0;
+        top: 200px;
+    }
+    to {
+        top: 70px;
+        opacity: 1;
     }
 }

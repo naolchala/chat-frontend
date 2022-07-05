@@ -7,7 +7,7 @@ export interface ISettingState {
 }
 
 export const useSettings = create<ISettingState>((set) => ({
-    menuOpen: true,
+    menuOpen: false,
     setMenu: (status: boolean) => set({ menuOpen: status }),
     toggleMenu: () => set((state) => ({ menuOpen: !state.menuOpen })),
 }));

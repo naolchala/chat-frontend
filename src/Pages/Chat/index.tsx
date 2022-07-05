@@ -4,7 +4,7 @@ import { MdArrowBack, MdClose, MdMenu, MdSearch, MdSend } from "react-icons/md";
 import { FaTelegram } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useSpring, animated } from "react-spring";
-import { io } from "socket.io-client";
+import { io, Socket } from "socket.io-client";
 import { Message } from "../../Message";
 import { IOtherUser, IUser, useFriends, useUser } from "../../States/User";
 import { apiUrl } from "../Login";
@@ -13,12 +13,16 @@ import { useFormikContext } from "formik";
 import axios from "axios";
 import { useSettings } from "../../States/Settings";
 import debounce from "lodash.debounce";
+import { DefaultEventsMap } from "@socket.io/component-emitter";
+
+export let socket: Socket<DefaultEventsMap, DefaultEventsMap>;
 
 function Chat() {
-    let socket;
-
     const navigate = useNavigate();
     const user = useUser((state) => state.currentUser);
+    const friends = useFriends((state) => state.friends);
+    const setFriends = useFriends((state) => state.setOnlineFriends);
+    const setFriendStatus = useFriends((state) => state.setOnlineStatus);
     const menuOpen = useSettings((state) => state.menuOpen);
     const searchResult = useFriends((state) => state.searchResult);
     const setSearchResult = useFriends((state) => state.setSearchResult);
@@ -27,11 +31,16 @@ function Chat() {
 
     const [contacts, loading_contacts, contacts_error] = useFetch<IOtherUser[]>(
         async () =>
-            await axios.get(`${apiUrl}/user/contacts`, {
-                headers: {
-                    Authorization: `Bearer ${user.token}`,
-                },
-            })
+            await axios
+                .get<IOtherUser[]>(`${apiUrl}/user/contacts`, {
+                    headers: {
+                        Authorization: `Bearer ${user.token}`,
+                    },
+                })
+                .then((res) => {
+                    setFriends(res.data);
+                    return res;
+                })
     );
 
     useEffect(() => {
@@ -39,6 +48,16 @@ function Chat() {
             extraHeaders: {
                 Authorization: `Bearer ${user.token}`,
             },
+        });
+
+        socket.on("friend_online", (friendID) => {
+            console.log({ friendID });
+            setFriendStatus(friendID, true);
+        });
+
+        socket.on("friend_offline", (friendID) => {
+            console.log({ friendID });
+            setFriendStatus(friendID, false);
         });
 
         if (!user.id) {
@@ -58,12 +77,19 @@ function Chat() {
         },
     });
 
-    const changeSearchQuery = debounce(async (e) => {
-        const val = e?.target?.value;
-        setSearchQuery(val);
-        const searchedContacts = await searchPerson(val);
-        setSearchResult(searchedContacts);
-    }, 500);
+    const changeSearchQuery = (e: any) => {
+        setSearchQuery(e?.target?.value);
+
+        debounce(() => {
+            console.log("hi");
+        }, 500);
+    };
+
+    const closeSearchBar = () => {
+        setSearchQuery("");
+        setSearchResult([]);
+        setSearchBar((val) => !val);
+    };
 
     return (
         <div className="App">
@@ -81,13 +107,14 @@ function Chat() {
                         <>
                             <div className="flex-1">
                                 <animated.input
+                                    value={searchQuery}
                                     onChange={changeSearchQuery}
                                     style={searchBarProps}
                                     className="search-input-field"
                                     placeholder="Search by Email"
                                 />
                             </div>
-                            <span onClick={() => setSearchBar((val) => !val)}>
+                            <span onClick={closeSearchBar}>
                                 {searchBar ? (
                                     <MdClose size={"24px"} />
                                 ) : (
@@ -105,14 +132,16 @@ function Chat() {
                                 </span>
                             )}
 
-                            {searchResult.map((result) => (
-                                <UserComponent
-                                    showText={true}
-                                    user={result}
-                                    key={result.id}
-                                    dense
-                                ></UserComponent>
-                            ))}
+                            {searchResult
+                                .filter((result) => result.id != user.id)
+                                .map((result) => (
+                                    <UserComponent
+                                        showText={true}
+                                        user={result}
+                                        key={result.id}
+                                        dense
+                                    ></UserComponent>
+                                ))}
                         </div>
                     )}
                 </header>
@@ -127,8 +156,9 @@ function Chat() {
                         </>
                     )}
                     {contacts_error && <span> error </span>}
-                    {contacts &&
-                        contacts.map((contact) => (
+
+                    {friends.length > 0 &&
+                        friends.map((contact) => (
                             <UserComponent
                                 key={contact.id}
                                 user={contact}
@@ -165,9 +195,9 @@ const UserComponent: FC<IUserComponent> = ({
 
     return (
         <div
-            className={`user ${dense && "dense"}  ${
-                selectedUser.id === user.id && "selected"
-            }`}
+            className={`user ${user.isOnline && "online"} ${
+                dense && "dense"
+            }  ${selectedUser.id === user.id && "selected"}`}
             onClick={setUser}
         >
             <div className="avatar">

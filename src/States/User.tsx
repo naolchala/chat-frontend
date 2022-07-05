@@ -35,6 +35,7 @@ export interface IFriendsState {
     searchResult: IOtherUser[];
     setSearchResult: (result: IOtherUser[]) => void;
     addOnlineFriend: (friend: IOtherUser) => void;
+    setOnlineFriends: (friends: IOtherUser[]) => void;
     setOnlineStatus: (id: string, status: boolean) => void;
 }
 export const useFriends = create<IFriendsState>((set, get) => {
@@ -49,12 +50,17 @@ export const useFriends = create<IFriendsState>((set, get) => {
             }));
         },
 
+        setOnlineFriends: (friends: IOtherUser[]) => {
+            set((state) => ({ friends: friends }));
+        },
+
         setOnlineStatus: (id: string, status: boolean) => {
             const u = get().friends.filter((user) => user.id == id)[0];
+            const nu = get().friends.filter((user) => user.id != id);
             u.isOnline = status;
 
             set((state) => ({
-                friends: [...state.friends, u],
+                friends: [...nu, u],
             }));
         },
     };
