@@ -1,67 +1,98 @@
+import produce from "immer";
 import create from "zustand";
+import { devtools, persist } from "zustand/middleware";
+import { IMessage } from "../lib/types";
 
 export interface IUser {
-    id: string;
-    name: string;
-    email: string;
-    bio?: string;
-    photoUrl?: string;
-    token: string;
-    isOnline: boolean;
-    lastseen: string;
+	id: string;
+	name: string;
+	email: string;
+	bio?: string;
+	photoUrl?: string;
+	token: string;
+	isOnline: boolean;
+	lastseen: string;
 }
 
 export type IOtherUser = Omit<IUser, "token">;
 
 export interface IUserState {
-    currentUser: IUser;
-    selectedUser: IOtherUser;
-    setUser: (newUser: IUser) => void;
-    setSelectedUser: (newSelectedUser: IOtherUser) => void;
-    logout: () => void;
+	currentUser: IUser;
+	setCurrentUser: (newUser: IUser) => void;
+	logout: () => void;
+
+	selectedUser: IOtherUser;
+	setSelectedUser: (newSelectedUser: IOtherUser) => void;
+
+	messages: IMessage[];
+	loadedUsers: String[];
+	addMessage: (message: IMessage[]) => void;
+	setMessages: (messages: IMessage[]) => void;
+	addMessageLoadedUser: (id: string) => void;
+
+	friends: IOtherUser[];
+	setOnlineStatus: (id: string, status: boolean) => void;
+	addOnlineFriend: (friend: IOtherUser) => void;
+	setOnlineFriends: (friends: IOtherUser[]) => void;
+
+	searchResult: IOtherUser[];
+	setSearchResult: (result: IOtherUser[]) => void;
 }
 
-export const useUser = create<IUserState>((set) => ({
-    currentUser: {} as IUser,
-    setUser: (newUser: IUser) => set({ currentUser: newUser }),
-    logout: () => set({ currentUser: {} as IUser }),
-    selectedUser: {} as IOtherUser,
-    setSelectedUser: (newSelectedUser: IOtherUser) =>
-        set({ selectedUser: newSelectedUser }),
-}));
+export const useUser = create<IUserState>()(
+	devtools((set, get) => ({
+		// Current User States
+		currentUser: {} as IUser,
+		setCurrentUser: (newUser: IUser) => set({ currentUser: newUser }),
+		logout: () => set({ currentUser: {} as IUser }),
 
-export interface IFriendsState {
-    friends: IOtherUser[];
-    searchResult: IOtherUser[];
-    setSearchResult: (result: IOtherUser[]) => void;
-    addOnlineFriend: (friend: IOtherUser) => void;
-    setOnlineFriends: (friends: IOtherUser[]) => void;
-    setOnlineStatus: (id: string, status: boolean) => void;
-}
-export const useFriends = create<IFriendsState>((set, get) => {
-    return {
-        friends: [] as IOtherUser[],
-        searchResult: [] as IOtherUser[],
-        setSearchResult: (result: IOtherUser[]) =>
-            set({ searchResult: result }),
-        addOnlineFriend: (friend: IOtherUser) => {
-            set((state) => ({
-                friends: [...state.friends, friend],
-            }));
-        },
+		// Selected User States
+		selectedUser: {} as IOtherUser,
+		setSelectedUser: (newSelectedUser: IOtherUser) =>
+			set({ selectedUser: newSelectedUser }),
 
-        setOnlineFriends: (friends: IOtherUser[]) => {
-            set((state) => ({ friends: friends }));
-        },
+		// Messages
+		messages: [],
+		loadedUsers: [],
+		addMessage: (message: IMessage[]) => {
+			return set((state) => ({
+				messages: [...message, ...state.messages],
+			}));
+		},
+		setMessages: (messages: IMessage[]) => {
+			return set({ messages });
+		},
+		addMessageLoadedUser: (id: string) => {
+			set((state) => ({ loadedUsers: [...state.loadedUsers, id] }));
+		},
 
-        setOnlineStatus: (id: string, status: boolean) => {
-            const u = get().friends.filter((user) => user.id == id)[0];
-            const nu = get().friends.filter((user) => user.id != id);
-            u.isOnline = status;
+		// Friends
+		friends: [] as IOtherUser[],
+		addOnlineFriend: (friend: IOtherUser) => {
+			set((state) => ({
+				friends: [...state.friends, friend],
+			}));
+		},
+		setOnlineFriends: (friends: IOtherUser[]) => {
+			set({ friends: friends });
+		},
+		setOnlineStatus: (id: string, status: boolean) => {
+			set(
+				produce((state: IUserState) => {
+					const current = state.friends.find(
+						(friend) => friend.id == id
+					);
 
-            set((state) => ({
-                friends: [...nu, u],
-            }));
-        },
-    };
-});
+					if (current) {
+						current.isOnline = status;
+					}
+				})
+			);
+		},
+
+		// Search Results
+		searchResult: [] as IOtherUser[],
+		setSearchResult: (result: IOtherUser[]) =>
+			set({ searchResult: result }),
+	}))
+);
