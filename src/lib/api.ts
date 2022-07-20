@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useQuery } from "react-query";
 import { IOtherUser, useUser } from "../States/User";
 
-export const apiUrl = "https://chat-backend-naol.herokuapp.com/";
+export const apiUrl = "https://chat-backend-naol.herokuapp.com";
 
 export const useContacts = () => {
 	const user = useUser((state) => state.currentUser);
