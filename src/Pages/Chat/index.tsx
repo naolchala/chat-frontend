@@ -49,7 +49,9 @@ function Chat() {
 		socket = io(apiUrl, {
 			autoConnect: false,
 			reconnection: false,
-			extraHeaders: { Authorization: `Bearer ${user.token}` },
+			auth: {
+				token: user.token,
+			},
 		});
 
 		socket.connect();
