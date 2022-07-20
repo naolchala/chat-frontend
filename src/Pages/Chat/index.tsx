@@ -47,10 +47,9 @@ function Chat() {
 
 	useEffect(() => {
 		socket = io(apiUrl, {
+			autoConnect: false,
 			reconnection: false,
-			extraHeaders: {
-				Authorization: `Bearer ${user.token}`,
-			},
+			extraHeaders: { Authorization: `Bearer ${user.token}` },
 		});
 
 		socket.connect();
@@ -202,10 +201,12 @@ const UserComponent: FC<IUserComponent> = ({
 	user,
 	dense,
 }: IUserComponent) => {
+	const setMenu = useSettings((state) => state.setMenu);
 	const setSelectedUser = useUser((state) => state.setSelectedUser);
 	const selectedUser = useUser((state) => state.selectedUser);
 	const setUser = () => {
 		setSelectedUser(user);
+		setMenu(false);
 	};
 
 	return (
